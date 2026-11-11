@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>클로드 코드로 만든 게임 5종</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+         background: #f1f5f9; color: #1e293b; padding: 32px 16px; }
+  h1 { text-align: center; font-size: 32px; margin: 0 0 8px; }
+  p.sub { text-align: center; font-size: 18px; color: #64748b; margin: 0 0 28px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px;
+          max-width: 960px; margin: 0 auto; }
+  a { display: block; background: #fff; border-radius: 20px; padding: 24px; text-decoration: none;
+      color: inherit; box-shadow: 0 6px 20px rgba(0,0,0,.08); transition: transform .15s; }
+  a:hover { transform: translateY(-4px); }
+  .emoji { font-size: 48px; }
+  .lv { display: inline-block; font-size: 16px; background: #e0e7ff; color: #4338ca; padding: 2px 10px; border-radius: 99px; }
+  h2 { font-size: 24px; margin: 8px 0 6px; }
+  .d { font-size: 18px; color: #475569; }
+</style>
+</head>
+<body>
+  <h1>🎮 클로드 코드로 만든 게임 5종</h1>
+  <p class="sub">모두 HTML 파일 하나 · 설치 없이 브라우저에서 바로 실행</p>
+  <div class="grid">
+    <a href="01_number_guess.html"><div class="emoji">🔢</div><span class="lv">난이도 ★</span><h2>숫자 맞추기</h2><div class="d">1~100 숫자를 UP/DOWN 힌트로 맞히기</div></a>
+    <a href="02_rock_paper_scissors.html"><div class="emoji">✊</div><span class="lv">난이도 ★</span><h2>가위바위보</h2><div class="d">컴퓨터와 대결, 점수판과 효과음</div></a>
+    <a href="03_memory_cards.html"><div class="emoji">🍎</div><span class="lv">난이도 ★★</span><h2>카드 짝 맞추기</h2><div class="d">4×4 카드 뒤집기, 타이머 포함</div></a>
+    <a href="04_whack_a_mole.html"><div class="emoji">🐹</div><span class="lv">난이도 ★★</span><h2>두더지 잡기</h2><div class="d">30초 동안 최대한 많이, 최고 기록 저장</div></a>
+    <a href="05_dodge.html"><div class="emoji">☄️</div><span class="lv">난이도 ★★★</span><h2>별똥별 피하기</h2><div class="d">방향키로 피하고 점점 빨라짐</div></a>
+  </div>
+</body>
+</html>

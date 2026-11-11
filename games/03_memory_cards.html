@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>카드 짝 맞추기</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
+         font-family: "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+         background: linear-gradient(135deg, #10b981, #3b82f6); padding: 16px; }
+  .wrap { background: #fff; border-radius: 24px; padding: 28px 20px; width: 100%; max-width: 500px;
+          text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,.25); }
+  h1 { margin: 0 0 12px; font-size: 30px; color: #1e293b; }
+  .stats { display: flex; justify-content: center; gap: 24px; font-size: 20px; color: #475569; margin-bottom: 16px; }
+  .stats b { color: #0f766e; }
+  .board { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .card { aspect-ratio: 1; perspective: 600px; cursor: pointer; }
+  .inner { position: relative; width: 100%; height: 100%; transition: transform .4s; transform-style: preserve-3d; }
+  .card.open .inner, .card.done .inner { transform: rotateY(180deg); }
+  .face { position: absolute; inset: 0; border-radius: 14px; display: flex; align-items: center;
+          justify-content: center; backface-visibility: hidden; font-size: 44px; }
+  .front { background: linear-gradient(135deg, #34d399, #3b82f6); color: #fff; font-size: 32px; font-weight: bold; }
+  .back { background: #f0fdf4; border: 3px solid #a7f3d0; transform: rotateY(180deg); }
+  .card.done .back { background: #dcfce7; border-color: #22c55e; }
+  #msg { font-size: 26px; font-weight: bold; color: #16a34a; margin-top: 18px; min-height: 34px; }
+  button { margin-top: 8px; font-size: 20px; font-weight: bold; padding: 12px 28px; border: none;
+           border-radius: 14px; background: #10b981; color: #fff; cursor: pointer; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>🍎 카드 짝 맞추기</h1>
+    <div class="stats">
+      <div>⏱️ <b id="time">0</b>초</div>
+      <div>🔄 <b id="moves">0</b>번</div>
+      <div>✅ <b id="pairs">0</b>/8</div>
+    </div>
+    <div class="board" id="board"></div>
+    <div id="msg"></div>
+    <button id="restart">새 게임</button>
+  </div>
+<script>
+  // 주제를 바꾸려면 이 배열만 바꾸면 됩니다 (8종)
+  const ITEMS = ['🍎', '🍌', '🍇', '🍓', '🍉', '🍑', '🍍', '🥝'];
+  const $ = id => document.getElementById(id);
+  let first, lock, moves, pairs, seconds, timer;
+
+  function shuffle(a) {
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function start() {
+    clearInterval(timer);
+    first = null; lock = false; moves = 0; pairs = 0; seconds = 0; timer = null;
+    $('moves').textContent = 0; $('pairs').textContent = 0; $('time').textContent = 0; $('msg').textContent = '';
+    const board = $('board'); board.innerHTML = '';
+    shuffle([...ITEMS, ...ITEMS]).forEach(item => {
+      const c = document.createElement('div');
+      c.className = 'card'; c.dataset.item = item;
+      c.innerHTML = `<div class="inner"><div class="face front">?</div><div class="face back">${item}</div></div>`;
+      c.addEventListener('click', () => flip(c));
+      board.appendChild(c);
+    });
+  }
+
+  function flip(c) {
+    if (lock || c === first || c.classList.contains('done')) return;
+    if (!timer) timer = setInterval(() => $('time').textContent = ++seconds, 1000);
+    c.classList.add('open');
+    if (!first) { first = c; return; }
+    moves++; $('moves').textContent = moves;
+    if (first.dataset.item === c.dataset.item) {
+      first.classList.add('done'); c.classList.add('done');
+      first = null; pairs++; $('pairs').textContent = pairs;
+      if (pairs === ITEMS.length) {
+        clearInterval(timer);
+        $('msg').textContent = `🎉 클리어! ${seconds}초, ${moves}번 만에 성공`;
+      }
+    } else {
+      lock = true;
+      const a = first; first = null;
+      setTimeout(() => { a.classList.remove('open'); c.classList.remove('open'); lock = false; }, 800);
+    }
+  }
+
+  $('restart').addEventListener('click', start);
+  start();
+</script>
+</body>
+</html>
