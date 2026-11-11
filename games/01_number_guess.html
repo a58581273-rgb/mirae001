@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>숫자 맞추기 (Up &amp; Down)</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
+         font-family: "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+         background: linear-gradient(135deg, #4f46e5, #06b6d4); color: #1e293b; padding: 16px; }
+  .card { background: #fff; border-radius: 24px; padding: 36px 28px; width: 100%; max-width: 440px;
+          text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,.25); }
+  h1 { margin: 0 0 8px; font-size: 32px; }
+  p.desc { margin: 0 0 24px; font-size: 18px; color: #64748b; }
+  input { width: 100%; font-size: 32px; text-align: center; padding: 12px; border: 3px solid #cbd5e1;
+          border-radius: 14px; outline: none; }
+  input:focus { border-color: #4f46e5; }
+  button { margin-top: 14px; width: 100%; font-size: 22px; font-weight: bold; padding: 14px;
+           border: none; border-radius: 14px; background: #4f46e5; color: #fff; cursor: pointer; }
+  button:hover { background: #4338ca; }
+  #msg { margin: 24px 0 8px; font-size: 30px; font-weight: bold; min-height: 40px; }
+  #info { font-size: 18px; color: #475569; }
+  #history { margin-top: 14px; font-size: 18px; color: #94a3b8; word-break: keep-all; }
+  .up { color: #dc2626; } .down { color: #2563eb; } .win { color: #16a34a; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>🔢 숫자 맞추기</h1>
+    <p class="desc">1부터 100 사이 숫자 하나를 맞혀 보세요!</p>
+    <input id="guess" type="number" min="1" max="100" placeholder="숫자 입력" autofocus>
+    <button id="btn">확인</button>
+    <div id="msg">&nbsp;</div>
+    <div id="info">시도 횟수: <b id="count">0</b>번</div>
+    <div id="history"></div>
+  </div>
+<script>
+  let answer, count, done, tried;
+  const $ = id => document.getElementById(id);
+
+  function newGame() {
+    answer = Math.floor(Math.random() * 100) + 1;
+    count = 0; done = false; tried = [];
+    $('count').textContent = 0;
+    $('msg').innerHTML = '&nbsp;'; $('msg').className = '';
+    $('history').textContent = '';
+    $('btn').textContent = '확인';
+    $('guess').value = ''; $('guess').focus();
+  }
+
+  function check() {
+    if (done) { newGame(); return; }
+    const n = Number($('guess').value);
+    if (!Number.isInteger(n) || n < 1 || n > 100) {
+      $('msg').textContent = '1~100 사이 숫자를 넣어 주세요'; $('msg').className = ''; return;
+    }
+    count++; tried.push(n);
+    $('count').textContent = count;
+    $('history').textContent = '입력한 숫자: ' + tried.join(', ');
+    if (n < answer)      { $('msg').textContent = '⬆️ UP! 더 큰 숫자예요'; $('msg').className = 'up'; }
+    else if (n > answer) { $('msg').textContent = '⬇️ DOWN! 더 작은 숫자예요'; $('msg').className = 'down'; }
+    else {
+      $('msg').textContent = `🎉 정답! ${count}번 만에 맞혔어요`; $('msg').className = 'win';
+      done = true; $('btn').textContent = '다시 하기';
+    }
+    $('guess').value = ''; $('guess').focus();
+  }
+
+  $('btn').addEventListener('click', check);
+  $('guess').addEventListener('keydown', e => { if (e.key === 'Enter') check(); });
+  newGame();
+</script>
+</body>
+</html>

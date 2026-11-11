@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>피하기 게임</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
+         font-family: "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+         background: linear-gradient(135deg, #1e1b4b, #7c3aed); padding: 16px; user-select: none; }
+  .wrap { text-align: center; color: #fff; width: 100%; max-width: 420px; }
+  h1 { margin: 0 0 8px; font-size: 30px; }
+  .stats { display: flex; justify-content: space-around; font-size: 20px; margin-bottom: 10px; }
+  .stats b { font-size: 26px; color: #fde047; }
+  canvas { width: 100%; background: linear-gradient(#0f172a, #312e81); border-radius: 18px;
+           box-shadow: 0 20px 50px rgba(0,0,0,.4); touch-action: none; display: block; }
+  p { font-size: 18px; color: #c4b5fd; margin: 12px 0 0; }
+  .pad { display: flex; gap: 12px; margin-top: 12px; }
+  .pad button { flex: 1; font-size: 32px; padding: 10px; border: none; border-radius: 14px;
+                background: rgba(255,255,255,.15); color: #fff; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>☄️ 별똥별 피하기</h1>
+    <div class="stats">
+      <div>⏱️ <b id="time">0.0</b>초</div>
+      <div>🏆 최고 <b id="best">0.0</b>초</div>
+    </div>
+    <canvas id="game" width="400" height="560"></canvas>
+    <div class="pad"><button id="left">◀</button><button id="right">▶</button></div>
+    <p>← → 방향키(또는 화면 버튼)로 움직이세요 · 스페이스바로 시작</p>
+  </div>
+<script>
+  const cv = document.getElementById('game'), ctx = cv.getContext('2d');
+  const W = cv.width, H = cv.height;
+  const player = { x: W / 2, y: H - 40, r: 20, speed: 6 };
+  const keys = { left: false, right: false };
+  let rocks = [], state = 'ready', elapsed = 0, spawnTimer = 0, last = 0;
+  let best = 0;
+  try { best = Number(localStorage.getItem('dodge-best')) || 0; } catch (e) {}
+  document.getElementById('best').textContent = best.toFixed(1);
+
+  function reset() {
+    rocks = []; elapsed = 0; spawnTimer = 0; player.x = W / 2; state = 'playing';
+  }
+
+  function update(dt) {
+    if (keys.left)  player.x -= player.speed * dt * 60;
+    if (keys.right) player.x += player.speed * dt * 60;
+    player.x = Math.max(player.r, Math.min(W - player.r, player.x));
+
+    elapsed += dt;
+    // 시간이 지날수록 더 자주, 더 빠르게
+    const level = 1 + elapsed / 10;
+    spawnTimer -= dt;
+    if (spawnTimer <= 0) {
+      rocks.push({ x: Math.random() * W, y: -20, r: 10 + Math.random() * 12,
+                   vy: (2.5 + Math.random() * 2) * level });
+      spawnTimer = Math.max(0.12, 0.6 / level);
+    }
+    rocks.forEach(r => r.y += r.vy * dt * 60);
+    rocks = rocks.filter(r => r.y < H + 30);
+
+    for (const r of rocks) {
+      const dx = r.x - player.x, dy = r.y - player.y;
+      if (Math.hypot(dx, dy) < r.r + player.r - 6) { gameOver(); break; }
+    }
+    document.getElementById('time').textContent = elapsed.toFixed(1);
+  }
+
+  function gameOver() {
+    state = 'over';
+    if (elapsed > best) {
+      best = elapsed;
+      document.getElementById('best').textContent = best.toFixed(1);
+      try { localStorage.setItem('dodge-best', best); } catch (e) {}
+    }
+  }
+
+  function drawText(lines) {
+    ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fillRect(0, H / 2 - 80, W, 160);
+    ctx.fillStyle = '#fff'; ctx.textAlign = 'center';
+    lines.forEach((t, i) => {
+      ctx.font = (i === 0 ? 'bold 34px' : '22px') + ' "Malgun Gothic", sans-serif';
+      ctx.fillText(t, W / 2, H / 2 - 20 + i * 44);
+    });
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    rocks.forEach(r => { ctx.font = r.r * 2 + 'px sans-serif'; ctx.fillText('☄️', r.x, r.y); });
+    ctx.font = '40px sans-serif'; ctx.fillText('🚀', player.x, player.y);
+    if (state === 'ready') drawText(['별똥별 피하기', '스페이스바 또는 화면을 탭!']);
+    if (state === 'over')  drawText([`💥 ${elapsed.toFixed(1)}초 버텼어요`, '스페이스바로 다시 시작']);
+  }
+
+  function loop(t) {
+    const dt = Math.min(0.05, (t - last) / 1000 || 0); last = t;
+    if (state === 'playing') update(dt);
+    draw();
+    requestAnimationFrame(loop);
+  }
+
+  function startIfIdle() { if (state !== 'playing') reset(); }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowLeft') keys.left = true;
+    if (e.key === 'ArrowRight') keys.right = true;
+    if (e.code === 'Space') { e.preventDefault(); startIfIdle(); }
+  });
+  document.addEventListener('keyup', e => {
+    if (e.key === 'ArrowLeft') keys.left = false;
+    if (e.key === 'ArrowRight') keys.right = false;
+  });
+  cv.addEventListener('pointerdown', startIfIdle);
+  [['left', 'left'], ['right', 'right']].forEach(([id, k]) => {
+    const b = document.getElementById(id);
+    b.addEventListener('pointerdown', () => { keys[k] = true; startIfIdle(); });
+    ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => b.addEventListener(ev, () => keys[k] = false));
+  });
+  requestAnimationFrame(loop);
+</script>
+</body>
+</html>

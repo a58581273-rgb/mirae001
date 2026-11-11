@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>가위바위보</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
+         font-family: "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+         background: linear-gradient(135deg, #f472b6, #fb923c); padding: 16px; }
+  .card { background: #fff; border-radius: 24px; padding: 32px 24px; width: 100%; max-width: 480px;
+          text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,.25); }
+  h1 { margin: 0 0 20px; font-size: 32px; color: #1e293b; }
+  .score { display: flex; justify-content: space-around; font-size: 20px; margin-bottom: 20px; }
+  .score div b { display: block; font-size: 36px; }
+  .w b { color: #16a34a; } .d b { color: #64748b; } .l b { color: #dc2626; }
+  .arena { display: flex; justify-content: space-around; align-items: center; font-size: 72px;
+           background: #fff7ed; border-radius: 18px; padding: 16px 0; }
+  .arena small { display: block; font-size: 18px; color: #64748b; }
+  .vs { font-size: 26px; font-weight: bold; color: #f97316; }
+  #result { font-size: 30px; font-weight: bold; margin: 20px 0; min-height: 40px; }
+  .btns { display: flex; gap: 12px; }
+  .btns button { flex: 1; font-size: 52px; padding: 12px 0; border: 3px solid #fed7aa; background: #fff;
+                 border-radius: 18px; cursor: pointer; transition: transform .1s; }
+  .btns button:hover { transform: scale(1.08); border-color: #f97316; }
+  .btns button span { display: block; font-size: 18px; color: #475569; }
+  #reset { margin-top: 18px; font-size: 18px; background: none; border: none; color: #94a3b8;
+           text-decoration: underline; cursor: pointer; }
+  .shake { animation: shake .4s; }
+  @keyframes shake { 0%,100% { transform: translateY(0) } 25%,75% { transform: translateY(-10px) } 50% { transform: translateY(6px) } }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>✊✌️🖐️ 가위바위보</h1>
+    <div class="score">
+      <div class="w">승<b id="win">0</b></div>
+      <div class="d">무<b id="draw">0</b></div>
+      <div class="l">패<b id="lose">0</b></div>
+    </div>
+    <div class="arena">
+      <div><span id="me">❔</span><small>나</small></div>
+      <div class="vs">VS</div>
+      <div><span id="com">❔</span><small>컴퓨터</small></div>
+    </div>
+    <div id="result">아래에서 하나를 고르세요</div>
+    <div class="btns">
+      <button data-pick="0">✌️<span>가위</span></button>
+      <button data-pick="1">✊<span>바위</span></button>
+      <button data-pick="2">🖐️<span>보</span></button>
+    </div>
+    <button id="reset">점수 초기화</button>
+  </div>
+<script>
+  const ICON = ['✌️', '✊', '🖐️'];
+  const score = { win: 0, draw: 0, lose: 0 };
+  const $ = id => document.getElementById(id);
+
+  // 짧은 효과음 (Web Audio, 외부 파일 없음)
+  function beep(freq) {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.frequency.value = freq; o.connect(g); g.connect(ctx.destination);
+      g.gain.setValueAtTime(0.2, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+      o.start(); o.stop(ctx.currentTime + 0.3);
+    } catch (e) {}
+  }
+
+  function play(me) {
+    const com = Math.floor(Math.random() * 3);
+    $('me').textContent = ICON[me];
+    $('com').textContent = ICON[com];
+    // 가위(0) < 바위(1) < 보(2) < 가위(0)
+    const diff = (me - com + 3) % 3;
+    let text, key;
+    if (diff === 0)      { text = '🤝 비겼어요!';   key = 'draw'; beep(440); }
+    else if (diff === 1) { text = '🎉 이겼어요!';   key = 'win';  beep(880); }
+    else                 { text = '😢 졌어요...';   key = 'lose'; beep(220); }
+    score[key]++;
+    $(key).textContent = score[key];
+    $('result').textContent = text;
+    const arena = document.querySelector('.arena');
+    arena.classList.remove('shake'); void arena.offsetWidth; arena.classList.add('shake');
+  }
+
+  document.querySelectorAll('[data-pick]').forEach(b =>
+    b.addEventListener('click', () => play(Number(b.dataset.pick))));
+  $('reset').addEventListener('click', () => {
+    for (const k in score) { score[k] = 0; $(k).textContent = 0; }
+    $('me').textContent = $('com').textContent = '❔';
+    $('result').textContent = '아래에서 하나를 고르세요';
+  });
+</script>
+</body>
+</html>

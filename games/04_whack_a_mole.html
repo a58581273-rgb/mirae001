@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>두더지 잡기</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
+         font-family: "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+         background: linear-gradient(135deg, #84cc16, #15803d); padding: 16px; user-select: none; }
+  .wrap { background: #fff; border-radius: 24px; padding: 28px 20px; width: 100%; max-width: 480px;
+          text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,.25); }
+  h1 { margin: 0 0 12px; font-size: 30px; color: #1e293b; }
+  .stats { display: flex; justify-content: space-around; font-size: 20px; color: #475569; margin-bottom: 16px; }
+  .stats b { display: block; font-size: 32px; color: #15803d; }
+  .field { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; background: #a16207;
+           padding: 14px; border-radius: 18px; }
+  .hole { aspect-ratio: 1; background: #422006; border-radius: 50%; position: relative; overflow: hidden;
+          cursor: pointer; box-shadow: inset 0 8px 12px rgba(0,0,0,.6); }
+  .mole { position: absolute; left: 0; right: 0; bottom: -100%; font-size: 56px; line-height: 1;
+          display: flex; justify-content: center; align-items: center; height: 100%; transition: bottom .15s; }
+  .hole.up .mole { bottom: 0; }
+  .hole.hit .mole { filter: grayscale(1) brightness(1.4); }
+  button { margin-top: 18px; font-size: 22px; font-weight: bold; padding: 14px 32px; border: none;
+           border-radius: 14px; background: #16a34a; color: #fff; cursor: pointer; }
+  button:disabled { background: #94a3b8; cursor: default; }
+  #msg { font-size: 24px; font-weight: bold; color: #b45309; margin-top: 14px; min-height: 32px; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>🔨 두더지 잡기</h1>
+    <div class="stats">
+      <div>점수<b id="score">0</b></div>
+      <div>남은 시간<b id="time">30</b></div>
+      <div>최고 기록<b id="best">0</b></div>
+    </div>
+    <div class="field" id="field"></div>
+    <div id="msg">시작 버튼을 누르세요!</div>
+    <button id="start">시작</button>
+  </div>
+<script>
+  const GAME_SECONDS = 30;
+  const $ = id => document.getElementById(id);
+  const field = $('field');
+  const holes = [];
+  let score = 0, timeLeft = 0, playing = false, tick, popper;
+
+  // 최고 기록은 브라우저에 저장 (막혀 있으면 그냥 넘어감)
+  let best = 0;
+  try { best = Number(localStorage.getItem('mole-best')) || 0; } catch (e) {}
+  $('best').textContent = best;
+
+  for (let i = 0; i < 9; i++) {
+    const h = document.createElement('div');
+    h.className = 'hole';
+    h.innerHTML = '<div class="mole">🐹</div>';
+    h.addEventListener('pointerdown', () => whack(h));
+    field.appendChild(h); holes.push(h);
+  }
+
+  function whack(h) {
+    if (!playing || !h.classList.contains('up') || h.classList.contains('hit')) return;
+    h.classList.add('hit');
+    score++; $('score').textContent = score;
+    setTimeout(() => h.classList.remove('up', 'hit'), 150);
+  }
+
+  function pop() {
+    if (!playing) return;
+    const empty = holes.filter(h => !h.classList.contains('up'));
+    const h = empty[Math.floor(Math.random() * empty.length)];
+    // 시간이 지날수록 빨라짐
+    const speed = 500 + 600 * (timeLeft / GAME_SECONDS);
+    h.classList.add('up');
+    setTimeout(() => h.classList.remove('up', 'hit'), speed);
+    popper = setTimeout(pop, speed * 0.7);
+  }
+
+  function start() {
+    score = 0; timeLeft = GAME_SECONDS; playing = true;
+    $('score').textContent = 0; $('time').textContent = timeLeft;
+    $('msg').textContent = '두더지를 클릭하세요!'; $('start').disabled = true;
+    pop();
+    tick = setInterval(() => {
+      timeLeft--; $('time').textContent = timeLeft;
+      if (timeLeft <= 0) end();
+    }, 1000);
+  }
+
+  function end() {
+    playing = false; clearInterval(tick); clearTimeout(popper);
+    holes.forEach(h => h.classList.remove('up', 'hit'));
+    let text = `⏰ 끝! ${score}마리 잡았어요`;
+    if (score > best) {
+      best = score; $('best').textContent = best; text += ' 🏆 신기록!';
+      try { localStorage.setItem('mole-best', best); } catch (e) {}
+    }
+    $('msg').textContent = text;
+    $('start').disabled = false; $('start').textContent = '다시 하기';
+  }
+
+  $('start').addEventListener('click', start);
+</script>
+</body>
+</html>
